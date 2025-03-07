@@ -30,9 +30,21 @@ class VCMatcher:
             api_key (str): OpenAI API key
             model (str): OpenAI model to use (default: gpt-3.5-turbo)
         """
-        self.client = OpenAI(api_key=api_key)
+        try:
+            # Try the new OpenAI client version
+            self.client = OpenAI(api_key=api_key)
+        except TypeError:
+            # Fall back to older style for compatibility
+            import openai
+            openai.api_key = api_key
+            self.client = openai
+        
         self.model = model
-        self.encoding = tiktoken.encoding_for_model(model)
+        try:
+            self.encoding = tiktoken.encoding_for_model(model)
+        except Exception:
+            # Fallback if tiktoken fails
+            self.encoding = None
     
     def _count_tokens(self, text: str) -> int:
         """
